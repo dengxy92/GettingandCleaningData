@@ -1,0 +1,220 @@
+---
+title: "Getting_and_cleaning_data"
+output: html_document
+date: "2022-09-12"
+---
+data are values of qualitative or quantitative variables, belonging to a set of items.
+Qualitative: country of origin, sex, treatment
+Quantitative: Height, weight, blood pressure
+
+get/set your working directory
+getwd()
+setwd()
+relative: setwd("./data"),setwd("../")
+absolute: setwd("/Users/..../data/")
+
+
+checking for and creating directories
+
+file.exists("direcotryName") will hceck to see if the directory exists)
+dir.create("direcotryName") will create a directory if it doesn't exist
+example
+if(!file.exist("data")){
+dir.create("data")
+}
+
+Getting data from the internet
+download.file()
+fileUrl <- "https://....."
+download.file(fileUrl, destfile = "./data/cameras.csv", method = "curl")
+using "curl", because the website is "https", the secured.
+list.file("./data")
+dateDownloaded <- date()
+
+If the url starts with http you can use download.file()
+If the url starts with https you need to set method = "curl"
+
+Loading flat files
+read.table("./data/cameras.csv", sep = ",", header = TRUE)
+
+This is the main function for reading data into R
+Flexible and robust but requires more parameters
+Reads the data into RAM - big data can cause problems
+Important parameters file. header, sep, row.names, nrows
+related: read.csv(), read.csv2()
+
+Reading Excel
+fileUrl <- "https://....."
+download.file(fileUrl, destfile = "./data/cameras.xlsx", method = "curl")
+list.file("./data")
+library(xlsx)
+cameraData <- read.xlsx("./data/cameras.xlsx", sheetIndex = 1, header = TRUE)
+colIndex <- 2:3
+rowIndex <- 1:4
+cameraDataSubset <- read.xlsx("./data/cameras.xlsx", sheetIndex = 1,
+                                                     colIndex = colIndex, 
+                                                     rowIndex = rowIndex)
+write.xlsx()
+read.xlsx2() is much faster than read.xlsx but for reading subsets of rows may be slightly unstable
+
+Reading XML
+Extensible markup language
+Frequently used to store structured data
+Particularly widely used in internet applications
+Extacting XML is the basis for most web scraping
+Components
+-- Makeup - labels that give the text structure
+-- Content - the actual text of the document
+
+Tags correspond to general labels
+-start tags <section>
+-End tags </section>
+-Empty tags <line-break />
+
+Elements are specific example of tags
+- <Greeting> Hello, world </Greeting>
+
+Attributes are components of the lable
+-<img scr = "jeff.jpg" alt = "instructor"/>
+-<step number = "3"> Connect A to B. </step>
+
+library(XML)
+fileUrl <- "......xml"
+doc <- xmlTreeParse(fileUrl, useInternal = TRUE)
+rootNode <- xmlRoot(doc)
+xmlName(rootNode)
+xmlSAplly(rootNode, xmlValue)
+XPath
+
+
+Reading JSON
+Javascript Object Notation
+Lightweight data storage
+Common format for data from application programming interfaces(APIs)
+Similar structure to XML but different syntax/format
+Data stored as
+Numbers (double)
+Strings (double quoted)
+Boolean (true or false)
+Array (ordered, comma separated enclosed in square brackets[])
+Object (unordered, comma separated collectoin of key: value pairs in curley brackets{})
+
+library(jsonlite)
+jsonData <- fromJSON("https:....")
+names(jsonData)
+
+Writing data frames to JSON
+myjson <- toJSON(iris, pretty = TRUE)
+cat(myjson)
+
+convert back to JSON
+iris2 <- fromJSON(myjson)
+
+Using data.table
+```{r}
+library(data.table)
+DT = data.table(x = rnorm(9), y = rep(c("a","b","c"), each =3), z = rnorm(9))
+head(DT, 3)
+#See all the data tables in memory
+tables()
+DT[2,]
+DT[DT$y =="a",]
+DT[c(2,3)]
+```
+
+Column subsetting in data.table
+The subsetting function is modified for data.table
+The argument you pass after the comma is called an "expression"
+In R an expression is a collection of statements enclosed in curley brackets
+{
+x = 1
+y = 2
+}
+k = {print(10);5}
+
+Calculating values for variables with expression
+DT[, list(mean(x),sum(z))]
+
+Addint new columns
+DT[, w:=z^2]
+
+Special variables
+.N an integer, length 1, contating the number r
+
+```{r}
+set.seed(123);
+DT <- data.table(x = sample(letters[1:3], 1E5, TRUE))
+DT[, .N, by = x]
+```
+Joins
+```{r}
+DT1 <- data.table(x = c('a', 'a', 'b', 'dt1'), y = 1:4)
+DT2 <- data.table(x = c('a', 'b', 'dt2'), z = 5:7)
+# The sorted columns are the key. 
+setkey(DT1, x);setkey(DT2, x)
+merge(DT1, DT2)
+
+```
+
+```{r}
+setwd("/Users/dengxiaoyan/Documents/Rstudio/Getting and Cleaning Data")
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv"
+download.file(fileUrl, destfile = "./data1.csv", method = "curl")
+data1 <- read.csv("./data1.csv", header = TRUE)
+prop <- data1$VAL
+idx <- complete.cases(prop[prop == 24])
+sum(idx)
+a <- data1$FES
+data1 = data.table(data1) # create data.table version of data
+data1[, .N, by=VAL==24]
+
+
+```
+Question3
+```{r}
+setwd("/Users/dengxiaoyan/Documents/Rstudio/Getting and Cleaning Data")
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FDATA.gov_NGAP.xlsx"
+download.file(fileUrl, destfile = "./data2.xlsx", method = "curl")
+library(xlsx)
+colIndex <- 7:15
+rowIndex <- 18:23
+dat <- read.xlsx("./data2.xlsx", sheetIndex = 1, colIndex = colIndex, rowIndex = rowIndex)
+sum(dat$Zip*dat$Ext,na.rm=T)
+```
+
+Question4
+```{r}
+setwd("/Users/dengxiaoyan/Documents/Rstudio/Getting and Cleaning Data")
+library(XML)
+fileUrl <- "http://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml"
+doc <- xmlTreeParse(fileUrl, useInternal = TRUE)
+rootnode <- xmlRoot(doc)
+xmlName(rootnode)
+names(rootnode)
+sum(xpathSApply(rootnode,"//zipcode",xmlValue) == 21231)
+```
+
+Question 5
+```{r}
+setwd("/Users/dengxiaoyan/Documents/Rstudio/Getting and Cleaning Data")
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv"
+download.file(fileUrl, destfile = "./data4.csv", method = "curl")
+
+DT <- fread("./data4.csv")
+
+system.time(tapply(DT$pwgtp15,DT$SEX,mean))
+
+system.time(sapply(split(DT$pwgtp15,DT$SEX),mean))
+
+system.time(mean(DT$pwgtp15,by=DT$SEX))
+
+system.time(DT[,mean(pwgtp15),by=SEX])
+
+system.time(mean(DT[DT$SEX==1,]$pwgtp15), mean(DT[DT$SEX==2,]$pwgtp15))
+
+system.time(rowMeans(DT)[DT$SEX==1])+system.time(rowMeans(DT)[DT$SEX==2])
+
+
+
+
+```

@@ -1,0 +1,119 @@
+---
+title: "Getting_data_week2"
+output: html_document
+date: "2022-09-14"
+---
+##SQL
+Connection and listing databases
+dbConnect(MySQL(), user = , db = database name,host = )#open the connection
+dbGetQuery()
+dbDisconnect()
+dbListTables()
+dbListField()
+
+
+dbGetQuery(database name,  "select count(*) from name of the table")
+dbReadTable(database name , "name of the table")
+dbSendQuery(name of database, "select * from name of table where misMatches between 1 and 3")
+fetch()
+quantile()
+dbClearResult()
+dim()
+
+##HDF5
+library(fhdf5)
+h5createFile()
+h5createGroup()
+h5ls() h5write() h5read()
+
+##Reading data from web
+url("")
+readLines()
+close()
+htmlCode()
+
+##parsing with XML
+library(XML)
+url <- "..."
+html <- htmlTreeParse(url, useInternalNodes = T)
+xpathSApply(html, "//title". xmlValue)
+xpathSAplly(html, "//td[@id='col-citedby']", xmlValue)
+
+library(httr)
+html2 =GET(url)
+content = content(html2, as = "text")
+parsedHtml = htmlParse(content2, asText = TRUE)
+xpathSAPlly(parsedHtml,"//title", xmlValue)
+Accessing websites with passwords
+pg1 = Get("", authenticate("user","passwd"))
+
+google = handle("")
+pg1 = GET(handle = google, path = "/")
+pg2 = GET(handle = google, path = "search")
+
+
+From APIs (Application programming interfaces)
+
+```{r}
+library(httr)
+
+# 1. Find OAuth settings for github:
+#    http://developer.github.com/v3/oauth/
+oauth_endpoints("github")
+
+# 2. To make your own application, register at
+#    https://github.com/settings/developers. Use any URL for the homepage URL
+#    (http://github.com is fine) and  http://localhost:1410 as the callback url
+#
+#    Replace your key and secret below.
+myapp <- oauth_app("github",
+  key = "56b637a5baffac62cad9",
+  secret = "8e107541ae1791259e9987d544ca568633da2ebf"
+)
+
+# 3. Get OAuth credentials
+github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+
+# 4. Use API
+gtoken <- config(token = github_token)
+req <- GET("https://api.github.com/rate_limit", gtoken)
+stop_for_status(req)
+content(req)
+
+# OR:
+req <- with_config(gtoken, GET("https://api.github.com/rate_limit"))
+stop_for_status(req)
+content(req)
+```
+
+Question 2
+```{r}
+library("sqldf")
+setwd('/Users/dengxiaoyan/Documents/Rstudio/Getting and Cleaning Data/')
+url <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv"
+f <- file.path(getwd(), "ss06pid.csv")
+download.file(url, f)
+acs <- data.table::data.table(read.csv(f))
+
+# Answer: 
+query1 <- sqldf("select pwgtp1 from acs where AGEP < 50")
+
+```
+
+Question 4
+```{r}
+library(httr)
+connection <- url( "http://biostat.jhsph.edu/~jleek/contact.html")
+htmlCode <- readLines(connection)
+close(connection)
+c(nchar(htmlCode[10]), nchar(htmlCode[20]), nchar(htmlCode[30]), nchar(htmlCode[100]))
+
+```
+Question 5
+```{r}
+x <- read.fwf(
+  file=url("https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for"),
+  skip=4,
+  widths=c(12, 7, 4, 9, 4, 9, 4, 9, 4))
+sum(x[,4])
+```
